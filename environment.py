@@ -53,7 +53,7 @@ class Environment(gym.Env):
         self.action_space = spaces.Discrete(NUMBER_DISCRETE_ACTIONS)
         spaces_dict = {
             "img": spaces.Box(low=0, high=255, shape=(MODEL_HEIGHT, MODEL_WIDTH, N_CHANNELS), dtype=np.uint8),
-            "prev_actions": spaces.Box(low=0, high=1, shape=(NUM_ACTION_HISTORY, NUMBER_DISCRETE_ACTIONS, 1), dtype=np.uint8),
+            "previous_actions": spaces.Box(low=0, high=1, shape=(NUM_ACTION_HISTORY, NUMBER_DISCRETE_ACTIONS, 1), dtype=np.uint8),
             "state": spaces.Box(low=0, high=1, shape=(2,), dtype=np.float32)
         }
         self.observation_space = gym.spaces.Dict(spaces_dict)
@@ -77,9 +77,9 @@ class Environment(gym.Env):
         self.MONITOR = config["MONITOR"]
         self.DEBUG_MODE = config["DEBUG_MODE"]
         self.GAME_MODE = config["GAME_MODE"]
+        self.DESIRED_FPS = config["DESIRED_FPS"]
 
-        self.matchmaking = Initialize_Fight.matchmaking()
-        self.lock_on = Initialize_Fight.lock_on()
+        self.init_fight = Initialize_Fight
         self.first_reset = True
 
     # One hot encoding of last 10 actions
@@ -265,4 +265,122 @@ class Environment(gym.Env):
 
         return in_loading_screen
     
+    # Step function called by train
+    def step(self, action):
+        if self.first_step:
+            print("Initiated first step")
+        time_start = time.time()
+        frame = self.grab_screen_shot()
+        self.reward, self.death, self.duel_won = self.rewardGen.update(frame, self.first_step)
+
+        if self.DEBUG_MODE:
+            print("Reward: ", self.reward)
+            print("Death: ", self.death)
+
+        # Check if game is done
+        if self.death:
+            self.done = True
+            print("Player died")
+        if self.duel_won:
+            self.done = True
+            print("Duel won!")
+
+        # Take action
+        if not self.done:
+            self.take_action(action)
+
+        # Return values
+        info = {}
+        observation = cv2.resize(frame, (MODEL_WIDTH, MODEL_HEIGHT))
+        if self.DEBUG_MODE: self.render_frame(observation)
+        if self.max_reward is None:
+            self.max_reward = self.reward
+        elif self.max_reward < self.reward:
+            self.max_reward = self.reward
+        self.reward_history.append(self.reward)
+        spaces_dict = {
+            'img': observation,
+            'previous_actions': self.one_hot_prev_actions(self.action_history),
+            'state': np.asarray([self.rewardGen.current_hp, self.rewardGen.current_stamina])
+        }
+
+        # Update variables
+        self.first_step = False
+        self.step_iteration += 1
+        self.action_history.append(int(action))
+
+        # Limit FPS
+        time_end = time.time()
+        desired_FPS = (1 / self.DESIRED_FPS)
+        time_to_sleep = desired_FPS - (time_end - time_start)
+        if time_to_sleep > 0:
+            time.sleep(time_to_sleep)
+
+        current_fps = str(round(((1 / ((time_end - time_start) * 10)) * 10), 1))
+
+        # Console ouput of step
+        if not self.done:
+            self.reward = round(self.reward, 0)
+            reward_with_spaces = str(self.reward)
+            for i in range(5 - len(reward_with_spaces)):
+                reward_with_spaces = " " + reward_with_spaces
+            max_reward_with_spaces = str(self.max_reward)
+            for i in range(5 - len(max_reward_with_spaces)):
+                max_reward_with_spaces = " " + max_reward_with_spaces
+            for i in range(18 - len(str(self.action_name))):
+                self.action_name = " " + self.action_name
+            for i in range(5 - len(current_fps)):
+                current_fps = " " + current_fps
+            print("Iteration: " + str(self.step_iteration) + "| FPS: " + current_fps + "| Reward: " + reward_with_spaces + "| Max Reward: " + max_reward_with_spaces + "| Action: " + str(self.action_name))
+        else:
+            print("Reward: " + str(self.reward) + "| Max Reward: " + str(self.max_reward))
+
+        # Return observation
+        return spaces_dict, self.reward, self.done, info
     
+    # Reset function
+    def reset(self):
+        print("Resetting...")
+
+        self.take_action(0)
+        print("Releasing keys")
+
+        # Print average reward
+        if len(self.reward_history) > 0:
+            total_reward = 0
+            for reward in self.reward_history:
+                total_reward += reward
+            average_reward = total_reward / len(self.reward_history)
+            print("Average reward of prior run: ", average_reward)
+
+        # Check for loading screen
+        if not self.first_reset:
+            self.wait_for_loading_screen()
+            self.init_fight.matchmaking()
+        self.first_reset = False
+        self.wait_for_loading_screen()
+        self.init_fight.lock_on()
+
+        # Reset all variables
+        self.step_iteration = 0
+        self.reward_history = [] 
+        self.done = False
+        self.first_step = True
+        self.max_reward = None
+        self.rewardGen.previous_hp = 1
+        self.rewardGen.current_hp = 1
+        self.rewardGen.time_since_dmg_taken = time.time()
+        self.action_history = []
+        self.time_start = time.time()
+
+        # Return first observation
+        frame = self.grab_screen_shot()
+        observation = cv2.resize(frame, (MODEL_WIDTH, MODEL_HEIGHT))
+        spaces_dict = {
+            "img": observation,
+            "previous_actions": self.one_hot_prev_actions(self.action_history),
+            "state": np.asarray([1.0, 1.0])
+        }
+
+        print("Finished reset")
+        return spaces_dict

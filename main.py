@@ -8,6 +8,7 @@ if __name__ == "__main__":
         "GAME_MODE": "PVP",
         "PLAYER_HP": 1900,
         "PLAYER_STAMINA": 150,
+        "DESIRED_FPS": 24
     }
 
     CREATE_NEW_MODEL = True

@@ -2,9 +2,6 @@ import pydirectinput
 import time
 
 class Initialize_Fight:
-    def perform(self):
-        return None
-    
     def matchmaking(self):
         pydirectinput.press("e")
         time.sleep(0.5)
