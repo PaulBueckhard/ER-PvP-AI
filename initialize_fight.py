@@ -20,3 +20,5 @@ class Initialize_Fight:
         pydirectinput.press("q")
         time.sleep(0.1)
         print("Locked on to target")
+        time.sleep(0.5)
+        pydirectinput.press("r")

@@ -7,6 +7,7 @@ from gym import spaces
 import pydirectinput
 import pytesseract
 from rewards import Rewards
+from initialize_fight import Initialize_Fight
 
 N_CHANNELS = 3
 IMG_WIDTH = 1920
@@ -28,6 +29,7 @@ DISCRETE_ACTIONS = {
     "b": "light_attack",
     "n": "heavy_attack",
     "m": "powerstance_attack",
+    "v": "skill",
     "w+b": "running_light",
     "w+n": "running_heavy",
     "w+m": "running_powerstance",
@@ -76,4 +78,191 @@ class Environment(gym.Env):
         self.DEBUG_MODE = config["DEBUG_MODE"]
         self.GAME_MODE = config["GAME_MODE"]
 
-        self.matchmaking = None
+        self.matchmaking = Initialize_Fight.matchmaking()
+        self.lock_on = Initialize_Fight.lock_on()
+        self.first_reset = True
+
+    # One hot encoding of last 10 actions
+    def one_hot_prev_actions(self, actions):
+        oneHot = np.zeros(shape=(NUM_ACTION_HISTORY, NUMBER_DISCRETE_ACTIONS, 1))
+        for i in range(NUM_ACTION_HISTORY):
+            if len(actions) >= (i + 1):
+                oneHot[i][actions[-(i + 1)]][0] = 1
+        #print(oneHot)
+        return oneHot
+    
+    # Grab screenshot of game
+    def grab_screen_shot(self):
+        monitor = self.sct.monitors[self.MONITOR]
+        sct_img = self.sct.grab(monitor)
+        frame = cv2.cvtColor(np.asarray(sct_img), cv2.COLOR_BGRA2RGB)
+        frame = frame[46:IMG_HEIGHT + 46, 12:IMG_WIDTH + 12]
+        if self.DEBUG_MODE:
+            self.render_frame(frame)
+        return frame
+    
+    # Render frame in debug mode
+    def render_frame(self, frame):
+        cv2.imshow('debug-render', frame)
+        cv2.waitKey(100)
+        cv2.destroyAllWindows()
+
+    # Define actions that model can do
+    def take_action(self, action):
+        #action = -1 # Emergency block all actions
+        if action == 0:
+            pydirectinput.keyUp("w")
+            pydirectinput.keyUp("s")
+            pydirectinput.keyUp("a")
+            pydirectinput.keyUp("d")
+            self.action_name = "stop"
+        elif action == 1:
+            pydirectinput.keyUp("w")
+            pydirectinput.keyUp("s")
+            pydirectinput.keyDown("w")
+            self.action_name = "w"
+        elif action == 2:
+            pydirectinput.keyUp("a")
+            pydirectinput.keyUp("d")
+            pydirectinput.keyDown("a")
+            self.action_name = "a"
+        elif action == 3:
+            pydirectinput.keyUp("w")
+            pydirectinput.keyUp("s")
+            pydirectinput.keyDown("s")
+            self.action_name = "s"
+        elif action == 4:
+            pydirectinput.keyUp("a")
+            pydirectinput.keyUp("d")
+            pydirectinput.keyDown("d")
+            self.action_name = "d"
+        elif action == 5:
+            pydirectinput.keyDown("w")
+            pydirectinput.press("space")
+            self.action_name = "forward_dodge"
+        elif action == 6:
+            pydirectinput.keyDown("a")
+            pydirectinput.press("space")
+            self.action_name = "left_dodge"
+        elif action == 7:
+            pydirectinput.keyDown("s")
+            pydirectinput.press("space")
+            self.action_name = "backward_dodge"
+        elif action == 8:
+            pydirectinput.keyDown("d")
+            pydirectinput.press("spadce")
+            self.action_name = "right_dodge"
+        elif action == 9:
+            pydirectinput.press("b")
+            self.action_name = "light_attack"
+        elif action == 10:
+            pydirectinput.press("n")
+            self.action_name = "heavy_attack"
+        elif action == 11:
+            pydirectinput.press("m")
+            self.action_name = "powerstance_attack"
+        elif action == 12:
+            pydirectinput.press("v")
+            self.action_name = "skill"
+        elif action == 13:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.35)
+            pydirectinput.press("b")
+            pydirectinput.keyUp("space")
+            self.action_name = "running_light"
+        elif action == 14:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.35)
+            pydirectinput.press("n")
+            pydirectinput.keyUp("space")
+            self.action_name = "running_heavy"
+        elif action == 15:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.35)
+            pydirectinput.press("m")
+            pydirectinput.keyUp("space")
+            self.action_name = "running_powerstance"
+        elif action == 16:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.2)
+            pydirectinput.press("f")
+            time.sleep(0.1)
+            pydirectinput.press("b")
+            pydirectinput.keyUp("space")
+            self.action_name = "jumping_light"
+        elif action == 17:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.2)
+            pydirectinput.press("f")
+            time.sleep(0.1)
+            pydirectinput.press("n")
+            pydirectinput.keyUp("space")
+            self.action_name = "jumping_heavy"
+        elif action == 18:
+            pydirectinput.keyDown("space")
+            pydirectinput.keyDown("w")
+            time.sleep(0.2)
+            pydirectinput.press("f")
+            time.sleep(0.1)
+            pydirectinput.press("m")
+            pydirectinput.keyUp("space")
+            self.action_name = "jumping_powerstance"
+        elif action == 19:
+            time.sleep(0.1)
+            pydirectinput.press("x")
+            time.sleep(0.2)
+            pydirectinput.press("b")
+            pydirectinput.press("x")
+            self.action_name = "crouch_attack"
+
+    # Wait for loading screen
+    def wait_for_loading_screen(self):
+        in_loading_screen = False
+        have_been_in_loading_screen = False
+        time_check_frozen_start = time.time()
+        time_since_seen_next = None
+        while True:
+            frame = self.grab_screen_shot()
+            in_loading_screen = self.check_for_loading_screen(frame)
+            if in_loading_screen:
+                print("Loading screen: ", in_loading_screen)
+                have_been_in_loading_screen = True
+                time_since_seen_next = time.time()
+            else:
+                if have_been_in_loading_screen:
+                    print("Loading complete")
+                else:
+                    print("Waiting for loading screen...")
+
+            if have_been_in_loading_screen and (time.time() - time_since_seen_next) > 2.5:
+                print("Left loading screen")
+            elif have_been_in_loading_screen and ((time.time() - time_check_frozen_start) > 90):
+                print("Did not leave loading screen. Game likely frozen.")
+                exit()
+            elif not have_been_in_loading_screen and ((time.time() - time_check_frozen_start) > 20):
+                print("No loading screen detected")
+                time_check_frozen_start = time.time()
+
+    def check_for_loading_screen(self, frame):
+        next_text_image = frame[1015:1040, 155:205]
+        next_text_image = cv2.resize(next_text_image, ((205-155)*3, (1040-1015)*3))
+        lower = np.array([0,0,75])
+        upper = np.array([255,255,255])
+        hsv = cv2.cvtColor(next_text_image, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(hsv, lower, upper)
+        pytesseract_output = pytesseract.image_to_string(mask,  lang='eng',config='--psm 6 --oem 3')
+        in_loading_screen = "Next" in pytesseract_output or "next" in pytesseract_output
+
+        if self.DEBUG_MODE:
+            matches = np.argwhere(mask==255)
+            percent_match = len(matches) / (mask.shape[0] * mask.shape[1])
+            print(percent_match)
+
+        return in_loading_screen
+    
+    
