@@ -23,3 +23,24 @@ def train(CREATE_NEW_MODEL, config):
     # Initialize environment
     env = Environment(config)
     print("Initialized environment")
+
+    # Create new model or load existing model
+    if CREATE_NEW_MODEL:
+        model = PPO(
+            "MultiInputPolicy",
+            env,
+            tensorboard_log=logdir,
+            n_steps=HORIZON_WINDOW,
+            verbose=1,
+            device="cpu"
+            )
+        print("Created new model...")
+    else:
+        model = PPO.load(model_path, env=env)
+        print(" Loaded model...")
+
+    # Training loop
+    while True:
+        model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False, tb_log_name="PPO", log_interval=1)
+        model.save(f"{models_dir}/PPO-1")
+        print("Updated model...")
