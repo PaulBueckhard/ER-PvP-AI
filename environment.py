@@ -6,6 +6,7 @@ import numpy as np
 from gym import spaces
 import pydirectinput
 import pytesseract
+from colorama import Fore
 from rewards import Rewards
 from initialize_fight import Initialize_Fight
 
@@ -230,26 +231,26 @@ class Environment(gym.Env):
             frame = self.grab_screen_shot()
             in_loading_screen = self.check_for_loading_screen(frame)
             if in_loading_screen:
-                print("Loading screen: ", in_loading_screen)
+                print(Fore.GREEN + "Loading screen: ", in_loading_screen)
                 have_been_in_loading_screen = True
                 time_since_seen_next = time.time()
             else:
                 if have_been_in_loading_screen:
-                    print("Loading complete")
+                    print(Fore.GREEN + "Loading complete")
                 else:
-                    print("Waiting for loading screen...")
+                    print(Fore.YELLOW + "Waiting for loading screen...")
 
             if have_been_in_loading_screen and (time.time() - time_since_seen_next) > 2.5:
-                print("Left loading screen")
+                print(Fore.GREEN + "Left loading screen")
             elif have_been_in_loading_screen and ((time.time() - time_check_frozen_start) > 90):
-                print("Did not leave loading screen. Game likely frozen.")
+                print(Fore.RED + "Did not leave loading screen. Game likely frozen.")
                 exit()
             elif not have_been_in_loading_screen and ((time.time() - time_check_frozen_start) > 20):
-                print("No loading screen detected")
+                print(Fore.RED + "No loading screen detected")
                 time_check_frozen_start = time.time()
 
     def check_for_loading_screen(self, frame):
-        next_text_image = frame[1015:1040, 155:205]
+        next_text_image = frame[975:1010, 135:195]
         next_text_image = cv2.resize(next_text_image, ((205-155)*3, (1040-1015)*3))
         lower = np.array([0,0,75])
         upper = np.array([255,255,255])
@@ -268,22 +269,22 @@ class Environment(gym.Env):
     # Step function called by train
     def step(self, action):
         if self.first_step:
-            print("Initiated first step")
+            print(Fore.CYAN + "Initiated first step")
         time_start = time.time()
         frame = self.grab_screen_shot()
         self.reward, self.death, self.duel_won = self.rewardGen.update(frame, self.first_step)
 
         if self.DEBUG_MODE:
-            print("Reward: ", self.reward)
-            print("Death: ", self.death)
+            print(Fore.CYAN + "Reward: ", self.reward)
+            print(Fore.CYAN + "Death: ", self.death)
 
         # Check if game is done
         if self.death:
             self.done = True
-            print("Player died")
+            print(Fore.CYAN + "Player died")
         if self.duel_won:
             self.done = True
-            print("Duel won!")
+            print(Fore.CYAN + "Duel won!")
 
         # Take action
         if not self.done:
@@ -340,10 +341,10 @@ class Environment(gym.Env):
     
     # Reset function
     def reset(self):
-        print("Resetting...")
+        print(Fore.YELLOW + "Resetting...")
 
         self.take_action(0)
-        print("Releasing keys")
+        print(Fore.YELLOW + "Releasing keys")
 
         # Print average reward
         if len(self.reward_history) > 0:
@@ -351,7 +352,7 @@ class Environment(gym.Env):
             for reward in self.reward_history:
                 total_reward += reward
             average_reward = total_reward / len(self.reward_history)
-            print("Average reward of prior run: ", average_reward)
+            print(Fore.CYAN + "Average reward of prior run: ", average_reward)
 
         # Check for loading screen
         if not self.first_reset:
@@ -382,5 +383,5 @@ class Environment(gym.Env):
             "state": np.asarray([1.0, 1.0])
         }
 
-        print("Finished reset")
+        print(Fore.GREEN + "Finished reset")
         return spaces_dict

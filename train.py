@@ -1,9 +1,10 @@
 from stable_baselines3 import PPO, A2C
 import os
+from colorama import Fore
 from environment import Environment
 
 def train(CREATE_NEW_MODEL, config):
-    print("Training initialized")
+    print(Fore.GREEN + "Training initialized")
 
     TIMESTEPS = 1
     HORIZON_WINDOW = 500
@@ -17,12 +18,12 @@ def train(CREATE_NEW_MODEL, config):
     models_dir = f"models/{model_name}/"
     logdir = f"logs/{model_name}/"			
     model_path = f"{models_dir}/PPO-1"
-    print("Created folder structure")
+    print(Fore.GREEN + "Created folder structure")
 
 
     # Initialize environment
     env = Environment(config)
-    print("Initialized environment")
+    print(Fore.GREEN + "Initialized environment")
 
     # Create new model or load existing model
     if CREATE_NEW_MODEL:
@@ -34,13 +35,13 @@ def train(CREATE_NEW_MODEL, config):
             verbose=1,
             device="cpu"
             )
-        print("Created new model...")
+        print(Fore.GREEN + "Created new model...")
     else:
         model = PPO.load(model_path, env=env)
-        print(" Loaded model...")
+        print(Fore.GREEN + "Loaded model...")
 
     # Training loop
     while True:
         model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=False, tb_log_name="PPO", log_interval=1)
         model.save(f"{models_dir}/PPO-1")
-        print("Updated model...")
+        print(Fore.GREEN + "Updated model...")

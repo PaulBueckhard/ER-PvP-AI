@@ -1,3 +1,4 @@
+from colorama import Fore
 import train
 
 if __name__ == "__main__":
@@ -13,5 +14,5 @@ if __name__ == "__main__":
 
     CREATE_NEW_MODEL = True
 
-    print("Model started")
+    print(Fore.GREEN + "Model started")
     train.train(CREATE_NEW_MODEL, env_config)
