@@ -89,4 +89,69 @@ class Rewards:
         else:
             return False
         
+    # Detect if duel is won
+    def detect_win(self, frame):
+        cut_frame = frame[730:800, 550:1350]
+        lower = np.array([0,0,75])
+        upper = np.array([255,255,255])
+        hsv = cv2.cvtColor(cut_frame, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(hsv, lower, upper)
+        pytesseract_output = pytesseract.image_to_string(mask,  lang='eng',config='--psm 6 --oem 3')
+        game_won = "Combat ends in your victory!" in pytesseract_output or "combat ends in your victory!" in pytesseract_output
+        return game_won
     
+    # Debug function
+    def render_frame(self, frame):
+        cv2.imshow("debug-render", frame)
+        cv2.waitKey(1000)
+        cv2.destroyAllWindows()
+
+    # Update function returning reward
+    def update(self, frame, first_step):
+        # Getting current values
+        self.current_hp = self.get_current_hp(frame)                   
+        self.current_stam = self.get_current_stamina(frame)            
+        if first_step: self.time_since_dmg_taken = time.time() - 10
+
+        self.death = False
+        if self.current_hp <= 0.01 + self.image_detection_tolerance:
+            self.death = True
+            self.current_hp = 0.0
+
+        # HP rewards
+        hp_reward = 0
+        if not self.death:
+            if self.current_hp < self.previous_hp - self.image_detection_tolerance:
+                hp_reward = -75
+                self.time_since_dmg_taken = time.time()
+        else:
+            hp_reward = -500
+
+        time_since_taken_dmg_reward = 0
+        if time.time() - self.time_since_dmg_taken > 5:
+            time_since_taken_dmg_reward = 25
+
+        self.previous_hp = self.current_hp
+
+        # Fighting rewards
+        fight_reward = 0
+        enemy_damaged = self.detect_opponent_damaged(frame)
+        if enemy_damaged:
+            fight_reward = 75
+            self.time_since_opponent_damaged = time.time()
+        else:
+            if time.time() - self.time_since_opponent_damaged > 5:
+                fight_reward = -25
+            else:
+                fight_reward = 0
+
+        # Win reward
+        self.game_won = self.detect_win(frame)
+        if self.game_won:
+            fight_reward = 500
+
+        # Return total reward
+        total_reward = hp_reward + time_since_taken_dmg_reward + fight_reward
+        total_reward = round(total_reward, 3)
+
+        return total_reward, self.death, self.game_won
