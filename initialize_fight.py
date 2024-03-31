@@ -3,7 +3,7 @@ import time
 from colorama import Fore
 
 class Initialize_Fight:
-    def matchmaking(self):
+    def matchmaking():
         pydirectinput.press("e")
         time.sleep(0.5)
         pydirectinput.press("up")
@@ -13,10 +13,10 @@ class Initialize_Fight:
         pydirectinput.press("e")
         print(Fore.GREEN + "Started matchmaking")
 
-    def lock_on(self):
+    def lock_on():
         time.sleep(0.5)
         pydirectinput.press("q")
         time.sleep(0.1)
         print(Fore.GREEN + "Locked on to target")
-        time.sleep(0.5)
+        time.sleep(1.0)
         pydirectinput.press("r")

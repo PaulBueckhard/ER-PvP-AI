@@ -63,7 +63,7 @@ class Environment(gym.Env):
         pytesseract.pytesseract.tesseract_cmd = config["PYTESSERACT_PATH"]
         self.sct = mss.mss()
         self.reward = 0
-        self.rewardGen = Rewards
+        self.rewardGen = Rewards(config)
         self.death = False
         self.duel_won = False
         self.t_start = time.time()
@@ -242,6 +242,7 @@ class Environment(gym.Env):
 
             if have_been_in_loading_screen and (time.time() - time_since_seen_next) > 2.5:
                 print(Fore.GREEN + "Left loading screen")
+                break
             elif have_been_in_loading_screen and ((time.time() - time_check_frozen_start) > 90):
                 print(Fore.RED + "Did not leave loading screen. Game likely frozen.")
                 exit()

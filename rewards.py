@@ -36,16 +36,16 @@ class Rewards:
         if self.DEBUG_MODE: self.render_frame(mask)
 
         matches = np.argwhere(mask==255)
-        self.current_hp = len(matches) / (hp_image.shape[1] * hp_image.shape[0])
+        current_hp = len(matches) / (hp_image.shape[1] * hp_image.shape[0])
 
-        self.current_hp += 0.02
-        if self.current_hp >= 0.95:
-            self.current_hp = 1.0
+        current_hp += 0.02
+        if current_hp >= 0.95:
+            current_hp = 1.0
 
         if self.DEBUG_MODE:
-            print("Current HP: ", self.current_hp)
+            print("Current HP: ", current_hp)
         
-        return self.current_hp
+        return current_hp
     
     # Detect current player stamina
     def get_current_stamina(self, frame):
