@@ -150,6 +150,14 @@ class Rewards:
         if self.game_won:
             fight_reward = 500
 
+            counter = open("duels_won.txt", "r")
+            duels_won = int(counter.read())
+            counter.close()
+            duels_won += 1
+            counter = open("duels_won.txt", "w")
+            counter.write(str(duels_won))
+            counter.close()
+
         # Return total reward
         total_reward = hp_reward + time_since_taken_dmg_reward + fight_reward
         total_reward = round(total_reward, 3)
