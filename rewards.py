@@ -24,7 +24,7 @@ class Rewards:
     # Detect current player HP
     def get_current_hp(self, frame):
         HP_RATIO = 0.403
-        hp_image = frame[51:53, 155:155 + int(self.max_hp * HP_RATIO) - 20]
+        hp_image = frame[33:35, 151:170 + int(self.max_hp * HP_RATIO) - 20]
         
         if self.DEBUG_MODE: 
             self.render_frame(hp_image)
@@ -50,7 +50,7 @@ class Rewards:
     # Detect current player stamina
     def get_current_stamina(self, frame):
         STAMINA_RATIO = 3.0
-        stamina_image = frame[86:89, 155:155 + int(self.max_stam * STAMINA_RATIO) - 20]
+        stamina_image = frame[68:70, 152:170 + int(self.max_stam * STAMINA_RATIO) - 20]
         
         if self.DEBUG_MODE:
             self.render_frame(stamina_image)
@@ -77,7 +77,7 @@ class Rewards:
     
     # Detect if opponent is damaged
     def detect_opponent_damaged(self, frame):
-        cut_frame = frame[150:400, 350:1700]
+        cut_frame = frame[130:450, 350:1700]
 
         lower = np.array([24,210,0])
         upper = np.array([25,255,255])
@@ -91,7 +91,7 @@ class Rewards:
         
     # Detect if duel is won
     def detect_win(self, frame):
-        cut_frame = frame[730:800, 550:1350]
+        cut_frame = frame[490:560, 550:1350]
         lower = np.array([0,0,75])
         upper = np.array([255,255,255])
         hsv = cv2.cvtColor(cut_frame, cv2.COLOR_RGB2HSV)
