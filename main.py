@@ -12,7 +12,7 @@ if __name__ == "__main__":
         "DESIRED_FPS": 24
     }
 
-    CREATE_NEW_MODEL = True
+    CREATE_NEW_MODEL = False
 
     print(Fore.GREEN + "Model started")
     train.train(CREATE_NEW_MODEL, env_config)

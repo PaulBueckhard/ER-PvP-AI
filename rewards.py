@@ -19,7 +19,7 @@ class Rewards:
         self.time_since_opponent_damaged = time.time()
         self.time_alive = time.time()  
         self.game_won = False    
-        self.image_detection_tolerance = 0.02
+        self.image_detection_tolerance = 0.01
 
     # Detect current player HP
     def get_current_hp(self, frame):
@@ -91,7 +91,7 @@ class Rewards:
         
     # Detect if duel is won
     def detect_win(self, frame):
-        cut_frame = frame[490:560, 550:1350]
+        cut_frame = frame[710:780, 550:1350]
         lower = np.array([0,0,75])
         upper = np.array([255,255,255])
         hsv = cv2.cvtColor(cut_frame, cv2.COLOR_RGB2HSV)
@@ -114,9 +114,17 @@ class Rewards:
         if first_step: self.time_since_dmg_taken = time.time() - 10
 
         self.death = False
-        if self.current_hp <= 0.01 + self.image_detection_tolerance:
+        if self.current_hp <= 0.015 + self.image_detection_tolerance:
             self.death = True
             self.current_hp = 0.0
+
+            counter = open("duels_lost.txt", "r")
+            duels_lost = int(counter.read())
+            counter.close()
+            duels_lost += 1
+            counter = open("duels_lost.txt", "w")
+            counter.write(str(duels_lost))
+            counter.close()
 
         # HP rewards
         hp_reward = 0
