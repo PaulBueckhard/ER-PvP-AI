@@ -114,7 +114,7 @@ class Rewards:
         if first_step: self.time_since_dmg_taken = time.time() - 10
 
         self.death = False
-        if self.current_hp <= 0.015 + self.image_detection_tolerance:
+        if self.current_hp <= 0.01 + self.image_detection_tolerance:
             self.death = True
             self.current_hp = 0.0
 
