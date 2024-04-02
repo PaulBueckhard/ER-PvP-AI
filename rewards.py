@@ -51,12 +51,12 @@ class Rewards:
     def get_current_stamina(self, frame):
         STAMINA_RATIO = 3.0
         stamina_image = frame[68:70, 152:170 + int(self.max_stam * STAMINA_RATIO) - 20]
-        
+
         if self.DEBUG_MODE:
             self.render_frame(stamina_image)
 
-        lower = np.array([6,52,24])
-        upper = np.array([74,255,77])
+        lower = np.array([25,50,20])
+        upper = np.array([80,255,255])
         hsv = cv2.cvtColor(stamina_image, cv2.COLOR_RGB2HSV)
         mask = cv2.inRange(hsv, lower, upper)
        
@@ -77,14 +77,14 @@ class Rewards:
     
     # Detect if opponent is damaged
     def detect_opponent_damaged(self, frame):
-        cut_frame = frame[130:450, 350:1700]
+        cut_frame = frame[100:450, 350:1700]
 
-        lower = np.array([24,210,0])
-        upper = np.array([25,255,255])
-        hsv = cv2.cvtColor(cut_frame, cv2.COLOR_RGB2HSV)
-        mask = cv2.inRange(hsv, lower, upper)
+        lower = np.array([138,118,28])
+        upper = np.array([157,142,42])
+        mask = cv2.inRange(cut_frame, lower, upper)
+
         matches = np.argwhere(mask==255)
-        if len(matches) > 30:
+        if len(matches) > 50:
             return True
         else:
             return False
