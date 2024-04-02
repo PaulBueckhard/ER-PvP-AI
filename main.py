@@ -7,8 +7,8 @@ if __name__ == "__main__":
         "MONITOR": 2,
         "DEBUG_MODE": False,
         "GAME_MODE": "PVP",
-        "PLAYER_HP": 1900,
-        "PLAYER_STAMINA": 150,
+        "PLAYER_HP": 2052,
+        "PLAYER_STAMINA": 137,
         "DESIRED_FPS": 24
     }
 

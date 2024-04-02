@@ -29,14 +29,12 @@ DISCRETE_ACTIONS = {
     "d+space": "right_dodge",
     "b": "light_attack",
     "n": "heavy_attack",
-    "m": "powerstance_attack",
+    "m": "offhand_attack",
     "v": "skill",
     "w+b": "running_light",
     "w+n": "running_heavy",
-    "w+m": "running_powerstance",
     "w+space+f+b": "jumping_light",
     "w+space+f+n": "jumping_heavy",
-    "w+space+f+m": "jumping_powerstance",
     "x+b": "crouch_attack",
     "r": "use_item"
 }
@@ -161,7 +159,7 @@ class Environment(gym.Env):
             self.action_name = "heavy_attack"
         elif action == 11:
             pydirectinput.press("m")
-            self.action_name = "powerstance_attack"
+            self.action_name = "offhand_attack"
         elif action == 12:
             pydirectinput.press("v")
             self.action_name = "skill"
@@ -182,20 +180,13 @@ class Environment(gym.Env):
         elif action == 15:
             pydirectinput.keyDown("space")
             pydirectinput.keyDown("w")
-            time.sleep(0.35)
-            pydirectinput.press("m")
-            pydirectinput.keyUp("space")
-            self.action_name = "running_powerstance"
-        elif action == 16:
-            pydirectinput.keyDown("space")
-            pydirectinput.keyDown("w")
             time.sleep(0.2)
             pydirectinput.press("f")
             time.sleep(0.1)
             pydirectinput.press("b")
             pydirectinput.keyUp("space")
             self.action_name = "jumping_light"
-        elif action == 17:
+        elif action == 16:
             pydirectinput.keyDown("space")
             pydirectinput.keyDown("w")
             time.sleep(0.2)
@@ -204,16 +195,7 @@ class Environment(gym.Env):
             pydirectinput.press("n")
             pydirectinput.keyUp("space")
             self.action_name = "jumping_heavy"
-        elif action == 18:
-            pydirectinput.keyDown("space")
-            pydirectinput.keyDown("w")
-            time.sleep(0.2)
-            pydirectinput.press("f")
-            time.sleep(0.1)
-            pydirectinput.press("m")
-            pydirectinput.keyUp("space")
-            self.action_name = "jumping_powerstance"
-        elif action == 19:
+        elif action == 17:
             time.sleep(0.1)
             pydirectinput.press("x")
             time.sleep(0.2)
