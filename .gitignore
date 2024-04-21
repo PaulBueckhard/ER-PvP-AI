@@ -4,3 +4,4 @@ __pycache__/
 duels_won.txt
 duels_lost.txt
 .gitignore
+todo.txt
